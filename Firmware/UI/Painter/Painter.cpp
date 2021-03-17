@@ -332,8 +332,7 @@ void Painter::DrawIcon(const Icon* image, uint16_t x, uint16_t y, uint16_t color
     }
 }
 
-void Painter::Draw2BitIcon(const Icon* image, uint16_t x, uint16_t y, const std::array<uint16_t, 4>& palette,
-                           bool transparency)
+void Painter::Draw2BitIcon(const Icon* image, uint16_t x, uint16_t y, uint16_t* palette, bool transparency)
 {
     // Note: Since icon is 2bit, Icon->Data should contain (Width * Height / 4) bytes
 
@@ -641,8 +640,8 @@ uint16_t Painter::ProcessByte(uint8_t data, uint16_t x, uint16_t xIndex, uint16_
     return xIndex;
 }
 
-void Painter::Process2BitByte(uint8_t data, uint16_t x, uint16_t xIndex, uint16_t yPos,
-                              const std::array<uint16_t, 4>& palette, bool transparency)
+void Painter::Process2BitByte(uint8_t data, uint16_t x, uint16_t xIndex, uint16_t yPos, uint16_t* palette,
+                              bool transparency)
 {
     for (int i = 0; i < 8; i += 2)
     {
