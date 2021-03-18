@@ -68,8 +68,9 @@ void MainPage::Draw(IPainter* painter)
     uint16_t cyanPalette[4]{static_cast<uint16_t>(Color565::Navy), static_cast<uint16_t>(Color565::DarkCyan),
                             static_cast<uint16_t>(Color565::Cyan), static_cast<uint16_t>(Color565::White)};
 
-    painter->Draw2BitIcon(&HomeIcon2Bit, 10, 124, grayScalePalette[0], true);
-    painter->Draw2BitIcon(&Test2Bit, 50, 124, cyanPalette[0], false);
+    painter->Draw2BitIcon(&HomeIcon2Bit, 10, 124, static_cast<uint16_t>(Color565::Orange), grayScalePalette[0], false);
+    painter->Draw2BitIcon(&HomeIcon2Bit, 50, 124, static_cast<uint16_t>(Color565::Orange), grayScalePalette[0], true);
+    // painter->Draw2BitIcon(&house_reversed, 50, 124, cyanPalette[3], cyanPalette[0], true);
 
     for (uint8_t index = 0; index < 6; index++)
     {
