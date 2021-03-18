@@ -332,7 +332,7 @@ void Painter::DrawIcon(const Icon* image, uint16_t x, uint16_t y, uint16_t color
     }
 }
 
-void Painter::Draw2BitIcon(const Icon* image, uint16_t x, uint16_t y, uint16_t* palette, bool transparency)
+void Painter::Draw2BitIcon(const Icon* image, uint16_t x, uint16_t y, uint16_t color, bool transparency)
 {
     // Note: Since icon is 2bit, Icon->Data should contain (Width * Height / 4) bytes
 
@@ -342,7 +342,7 @@ void Painter::Draw2BitIcon(const Icon* image, uint16_t x, uint16_t y, uint16_t* 
         for (uint16_t xIndex = 0; xIndex < image->Width; xIndex += 4)
         {
             uint8_t currentByte = image->Data[yIndex * image->Width / 4 + xIndex / 4];
-            Process2BitByte(currentByte, x, xIndex, yPos, palette, transparency);
+            Process2BitByte(currentByte, x, xIndex, yPos, color, transparency);
         }
     }
 }
@@ -640,17 +640,71 @@ uint16_t Painter::ProcessByte(uint8_t data, uint16_t x, uint16_t xIndex, uint16_
     return xIndex;
 }
 
-void Painter::Process2BitByte(uint8_t data, uint16_t x, uint16_t xIndex, uint16_t yPos, uint16_t* palette,
+struct ColorRGB565
+{
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+    ColorRGB565(uint8_t red, uint8_t green, uint8_t blue) : red(red), green(green), blue(blue)
+    {
+    }
+    ColorRGB565(uint16_t c) : red((c >> 11) & 0x1F), green((c >> 5) & 0x3F), blue(c & 0x1F)
+    {
+    }
+
+    uint16_t mergeToInt()
+    {
+        return ((red & 0x1F) << 11) | ((green & 0x3F) << 5) | (blue & 0x1F);
+    }
+};
+
+ColorRGB565 LerpColor(ColorRGB565 a, ColorRGB565 b, float t)
+{
+    return {a.red + (b.red - a.red) * t, a.green + (b.green - a.green) * t, a.blue + (b.blue - a.blue) * t};
+}
+
+uint16_t LerpColor(uint16_t backgroundColor, uint16_t foregroundColor, float percentage)
+{
+    LerpColor(ColorRGB565(foregroundColor), ColorRGB565(backgroundColor), percentage).mergeToInt();
+}
+
+uint16_t Painter::GetPixel(uint16_t x, uint16_t y)
+{
+    return _framebuffer[y * _framebufferWidth + x];
+}
+
+uint16_t GetColor(uint16_t backgroundColor, uint16_t foregroundColor, uint8_t color_bits)
+{
+    switch (color_bits)
+    {
+    case 0b11:
+        return foregroundColor;
+    case 0b10:
+        return LerpColor(backgroundColor, foregroundColor, 0.7);
+    case 0b01:
+        return LerpColor(backgroundColor, foregroundColor, 0.3);
+    case 0b00:
+        return backgroundColor;
+    default:
+        return backgroundColor;
+    }
+}
+
+void Painter::Process2BitByte(uint8_t data, uint16_t x, uint16_t xIndex, uint16_t yPos, uint16_t color,
                               bool transparency)
 {
     for (int i = 0; i < 8; i += 2)
     {
         const uint8_t mask = 0b11;
-        uint8_t color = (data >> i) & mask;
-        if (!transparency || color != 0b11)
-        {
-            DrawPixel(x + xIndex, yPos, palette[color]);
-        }
+        uint8_t colorBits = (data >> i) & mask;
+        uint16_t bgColor = GetPixel(x + xIndex, yPos); // this is for transparent
+        auto currentColor = GetColor(bgColor, color, colorBits);
+        // printf("%u", currentColor);
+
+        // if (!transparency || color != 0)
+        // {
+        DrawPixel(x + xIndex, yPos, currentColor);
+        // }
         xIndex++;
     }
 }
