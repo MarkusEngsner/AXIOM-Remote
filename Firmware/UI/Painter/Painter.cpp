@@ -651,37 +651,20 @@ uint16_t Painter::ProcessByte(uint8_t data, uint16_t x, uint16_t xIndex, uint16_
     return xIndex;
 }
 
-struct ColorRGB565
-{
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-    ColorRGB565(uint8_t red, uint8_t green, uint8_t blue) : red(red), green(green), blue(blue)
-    {
-    }
-    ColorRGB565(uint16_t c) : red((c >> 11) & 0x1F), green((c >> 5) & 0x3F), blue(c & 0x1F)
-    {
-    }
-
-    uint16_t mergeToInt()
-    {
-        return ((red & 0x1F) << 11) | ((green & 0x3F) << 5) | (blue & 0x1F);
-    }
-};
-
 uint8_t Lerp(uint8_t a, uint8_t b, float t)
 {
     return a + (b - a) * t;
 }
 
-ColorRGB565 LerpColor(ColorRGB565 a, ColorRGB565 b, float t)
+uint16_t LerpColor(uint16_t a, uint16_t b, float t)
 {
-    return {Lerp(a.red, b.red, t), Lerp(b.green, a.green, t), Lerp(a.blue, b.blue, t)};
-}
-
-uint16_t LerpColor(uint16_t foregroundColor, uint16_t backgroundColor, float percentage)
-{
-    LerpColor(ColorRGB565(foregroundColor), ColorRGB565(backgroundColor), percentage).mergeToInt();
+    const uint8_t a_r = (a >> 8) & 0xF8;
+    const uint8_t a_g = (a >> 3) & 0xFC;
+    const uint8_t a_b = (a << 3) & 0xF8;
+    const uint8_t b_r = (b >> 8) & 0xF8;
+    const uint8_t b_g = (b >> 3) & 0xFC;
+    const uint8_t b_b = (b << 3) & 0xF8;
+    return RGB565(Lerp(a_r, b_r, t), Lerp(a_g, b_g, t), Lerp(a_b, b_b, t));
 }
 
 uint16_t Painter::GetPixel(uint16_t x, uint16_t y)
