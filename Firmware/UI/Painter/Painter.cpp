@@ -360,6 +360,8 @@ void Painter::Draw2BitIcon(const Icon* image, uint16_t x, uint16_t y, uint16_t f
     }
 }
 
+// uint8_t count = 0;
+
 void Painter::DrawText(uint16_t x, uint16_t y, const char* text, uint16_t color, TextAlign align,
                        uint16_t textblockwidth)
 {
